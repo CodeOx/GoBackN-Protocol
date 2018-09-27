@@ -5,6 +5,8 @@ from mininet.net import Mininet
 from mininet.log import lg, info
 from mininet.cli import CLI
 import subprocess
+import fcntl
+import os
 
 def main():
     lg.setLogLevel('info')
@@ -13,17 +15,17 @@ def main():
     net.start()
 
     h1 = net.get('h1')
-    p1 = h1.popen('python physicalLayer.py -i_src %s -i_dest %s &' % (h1.IP(), h2.IP()), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE,  close_fds=True)
-    p1.stdin.write('recieve')
-    p1.stdin.flush()
+    h2 = net.get('h2')
+
+    p1 = h1.popen('python physicalLayer.py -s %s -d %s -m % s &' % (h1.IP(), h2.IP(), 'abcd'), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE,  close_fds=True)
     message = p1.stdout.read()
     print message
 
-    h2 = net.get('h2')
-    p2 = h2.popen('python physicalLayer.py -i_src %s -i_dest %s &' % (h2.IP(), h1.IP()), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE,  close_fds=True)
-    p2.stdin.write('send')
-    p2.stdin.flush()
     
+    p2 = h2.popen('python physicalLayer.py -s %s -d %s -m %s &' % (h2.IP(), h1.IP(), 'pqrs'), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE,  close_fds=True)
+    message2 = p2.stdout.read()
+    print message2    
+
     CLI( net )
     p1.terminate()
     net.stop()
