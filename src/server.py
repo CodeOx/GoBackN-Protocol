@@ -1,5 +1,7 @@
 import socket, optparse
 
+print "server started"
+
 parser = optparse.OptionParser()
 parser.add_option('-i', dest='ip', default='')
 parser.add_option('-p', dest='port', type='int', default=12345)
@@ -13,3 +15,5 @@ while True:
   data, addr = s.recvfrom(512)
   f.write("%s: %s\n" % (addr, data))
   f.flush()
+
+print "server closed"

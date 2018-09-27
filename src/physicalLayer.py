@@ -1,8 +1,8 @@
 import socket
 from scapy.all import *
 import optparse
-
-print "coool"
+import time
+import datetime
 
 parser = optparse.OptionParser()
 parser.add_option('-s', dest='src_ip', default='')
@@ -15,17 +15,21 @@ dest_ip = options.dest_ip
 port = options.port
 method = options.method
 
-print "ffffFF"
+f = open(method +'.txt','w')
+f.write('started writing to file')
+f.flush()
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind((src_ip, port))
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-print "vzfdvV"
-
 def recievePacket():
-    message, address = server_socket.recvfrom(1024)
-    #return Ether(message)
+    message = ''
+    while True :
+	    message, address = server_socket.recvfrom(512)
+	    #return Ether(message)
+	    f.write(message)
+	    f.flush()
     return message
 
 def sendPacket(packet, ip, port):
@@ -34,12 +38,17 @@ def sendPacket(packet, ip, port):
     client_socket.sendto(message, addr)
 
 def main():
-	print method
+	f.write("cdvzvfzvf")
+        f.flush()
+        f.write(str(datetime.datetime.now()))
+        f.flush()
+        time.sleep(6)
+	f.write(str(datetime.datetime.now()))
+        f.flush()
 	if(method == "recieve") :
-		print recievePacket()
+		recievePacket()
 	else :
 		sendPacket('abcd' , dest_ip, port)
 
 if __name__ == "__main__":
-    print "hello"
     main()
