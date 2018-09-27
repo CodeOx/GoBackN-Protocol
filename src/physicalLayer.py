@@ -15,10 +15,6 @@ dest_ip = options.dest_ip
 port = options.port
 method = options.method
 
-f = open(method +'.txt','w')
-f.write('started writing to file')
-f.flush()
-
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind((src_ip, port))
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -28,6 +24,7 @@ def recievePacket():
     while True :
 	    message, address = server_socket.recvfrom(512)
 	    #return Ether(message)
+	    f = open('main.txt','w')
 	    f.write(message)
 	    f.flush()
     return message
@@ -38,17 +35,10 @@ def sendPacket(packet, ip, port):
     client_socket.sendto(message, addr)
 
 def main():
-	f.write("cdvzvfzvf")
-        f.flush()
-        f.write(str(datetime.datetime.now()))
-        f.flush()
-        time.sleep(6)
-	f.write(str(datetime.datetime.now()))
-        f.flush()
 	if(method == "recieve") :
 		recievePacket()
 	else :
-		sendPacket('abcd' , dest_ip, port)
+		sendPacket('Shashwat Banchhor' , dest_ip, port)
 
 if __name__ == "__main__":
     main()
