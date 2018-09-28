@@ -3,7 +3,7 @@ import optparse
 import threading
 import datetime
 import physicalLayer
-from physicalLayer import Frame,Packet
+import networkLayer
 
 MAX_SEQ = 7
 PACKET_READY = False
@@ -21,9 +21,19 @@ dest_ip = options.dest_ip
 port = options.port
 method = options.method
 
+class Frame(object):
+	"""docstring for Frame"""
+	def __init__(self, information,sequence,acknowledgement):
+		super(Frame, self).__init__()
+		self.info = information
+		self.seq = sequence
+		self.ack = acknowledgement
 
-
-
+class Packet(object):
+	"""docstring for Packet"""
+	def __init__(self, arg):
+		super(Packet, self).__init__()
+		self.arg = arg
 
 def between(a,b,c):
 	if (((a<=b)and(b<c)) or ((c<a) and (a<=b)) or ((b<c)and(c<a))):
@@ -33,7 +43,9 @@ def between(a,b,c):
 		
 def send_data(frame_nr,frame_expected,buffer):
 	s = Frame(buffer[frame_nr],frame_nr,(frame_expected+MAX_SEQ)%(MAX_SEQ+1))
-	physicalLayer.sendPacket(buffer[frame_nr],dest_ip, port)
+	#Frame s = Frame(buffer[frame_nr],frame_nr,0)
+	msg = make_msg_from_frame(s)	
+	physicalLayer.sendFrame(msg,dest_ip, port)
 	# send to physical layer
 	# start time
 
@@ -46,9 +58,23 @@ class Seq_nr(object):
 
 	def inc(self):
 		self.arg = (self.arg+1)%(MAX_SEQ+1)
-		
+
+def make_msg_from_frame(frame):
+    packet = frame.info
+    #f3 = open('test2.txt', 'w')
+    message =  str(frame.seq)+str(frame.ack)+str(packet.arg) 
+    return message
+
+def get_frame_from_msg(message):	
+    recv_fr_seq = message[0]
+    recv_fr_ack = message[1]
+    message = message[2:len(message)-1]
+    recv_pkt = Packet(message)
+    recv_fr = Frame(recv_pkt,int(recv_fr_seq),int(recv_fr_ack))
+    return recv_fr
+	
 def data_link_enable():
-	global EVENT
+	global EVENT, BUFFER
 	t0 = time.time()	
 	next_frame_to_send = (-1)
 	ack_expected = (-1)
@@ -70,20 +96,22 @@ def data_link_enable():
 	while (time.time()-t0 < 50):
 
 		if EVENT < 4:
+					
 			if physicalLayer.physical_layer_ready(): # frame arrival
-				r = physicalLayer.from_physical_layer()
-				f = open('abc.txt', 'w')
-				f.write(r)
-				f.flush()
-				#if r.seq == frame_expected:
+				M = physicalLayer.from_physical_layer()
+ 				r = get_frame_from_msg(str(M))
+				f11 = open('abcd.txt', 'w')
+				f11.write(M)
+				f11.flush()
+				if r.seq == frame_expected:
 					#write to file
 					#to_network_layer(r.info)
-					#frame_expected += 1
+					frame_expected += 1
 
-				#while (between(ack_expected,r.ack,next_frame_to_send)):
-				#	nbuffered = nbuffered -1
+				while (between(ack_expected,r.ack,next_frame_to_send)):
+					nbuffered = nbuffered -1
 					#stop_timer()
-				#	ack_expected+=1
+					ack_expected+=1
 
 
 			elif EVENT==1: # cksum_err
@@ -97,7 +125,7 @@ def data_link_enable():
 			elif EVENT ==3: # network_layer_ready
 				# from net_layer
 				#new_packet = 'abcd'
-				new_packet = Packet('abcd')				
+				new_packet = Packet('abcd') # send by net layer				
 				BUFFER.append(new_packet)
 				#new_packet  = buffer[next_frame_to_send]
 				nbuffered = nbuffered +1
@@ -115,7 +143,7 @@ def data_link_enable():
 
 
 physicalLayer.start_physical_layer(src_ip, port)
-t1 = threading.Thread(target= physicalLayer.recievePacket, name='t1')
+t1 = threading.Thread(target= physicalLayer.recieveFrame, name='t1')
 t2 = threading.Thread(target = data_link_enable, name='t2')
 
 if method=='send' : 	
