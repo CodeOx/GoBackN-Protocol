@@ -5,7 +5,7 @@ import datetime
 import physicalLayer
 import networkLayer
 
-MAX_SEQ = 7
+MAX_SEQ = 3
 PACKET_READY = False
 EVENT = 0
 BUFFER =[]
@@ -151,13 +151,13 @@ def data_link_enable():
 						#f11.close()
 						#to_network_layer(r.info)
 						networkLayer.pass_pkt(method + '_reached_network_layer.txt', r.info.arg)
-						frame_expected += 1
+						frame_expected = (frame_expected+ 1) % MAX_SEQ
 
 					while (between(ack_expected,r.ack,next_frame_to_send)):
-						nbuffered = nbuffered -1
+						nbuffered = (nbuffered -1)
 						#stop_timer()
 						CLOCKS[ack_expected] = -1					
-						ack_expected+=1
+						ack_expected = (ack_expected + 1) % MAX_SEQ
 
 
 			#elif check_sum_err(): # cksum_err
@@ -168,7 +168,7 @@ def data_link_enable():
 				next_frame_to_send = ack_expected
 				for i in xrange(1,nbuffered+1):
 					send_data(next_frame_to_send,frame_expected,buffer)
-					next_frame_to_send+= 1
+					next_frame_to_send = (next_frame_to_send+ 1)%MAX_SEQ
 
 			elif networkLayer.network_layer_ready(): # network_layer_ready
 				# from net_layer
@@ -177,14 +177,14 @@ def data_link_enable():
 				new_packet = Packet(networkLayer.get_pkt(method+"_taken_from_net_layer.txt"))
 				#new_packet = Packet('abcd') # send by net layer	
 							
-				BUFFER.append(new_packet)
+				BUFFER[next_frame_to_send] = (new_packet)
 				f.write(BUFFER[next_frame_to_send].arg + '\n')
 				f.close()
 				#new_packet  = buffer[next_frame_to_send]
 				CLOCKS[next_frame_to_send] = time.time()
-				nbuffered = nbuffered +1
+				nbuffered = (nbuffered +1)
 				send_data(next_frame_to_send,frame_expected,BUFFER)
-				next_frame_to_send += 1 
+				next_frame_to_send = (next_frame_to_send+ 1)%MAX_SEQ 
 				EVENT = 0
 
 
@@ -194,6 +194,7 @@ def data_link_enable():
 			print
 			 
 
+BUFFER = [Packet('') for i in range(MAX_SEQ)]
 
 physicalLayer.start_physical_layer(src_ip, port)
 t1 = threading.Thread(target= physicalLayer.recieveFrame, name='t1')

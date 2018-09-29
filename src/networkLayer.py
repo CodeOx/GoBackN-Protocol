@@ -4,7 +4,7 @@ import time
 import datetime
 
 OBTAINED_FROM_DATALINK = []
-TO_SEND_TO_DATA_LINK = ['a','e','i','o','u']
+TO_SEND_TO_DATA_LINK = ['The','sun','rises','in','the','east','and','sets','in','the','west']
 count = -1
 
 NETWORK_LAYER_READY = False
