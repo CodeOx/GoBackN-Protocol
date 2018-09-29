@@ -33,11 +33,15 @@ def recieveFrame():
 	    f = open('recieved_from_other_host.txt','a')
 	    f.write(message + '\n')
 	    f.flush()
+	    f.close()
 	    packet_recieved = True
-	    return
     return
 
 def sendFrame(message, ip, port):
+    f = open('sent_from_origin_host.txt', 'a')
+    f.write(message)
+    f.flush()
+    f.close()
     addr = (ip, port)
     client_socket.sendto(message, addr)
 
@@ -46,7 +50,8 @@ def write():
     for i in range(10) :
         fi.write(str(datetime.datetime.now()) + "\n")
 	fi.flush()
-	time.sleep(1)    
+	time.sleep(1)
+    fi.close()    
 
     
 

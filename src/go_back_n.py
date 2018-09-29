@@ -68,7 +68,7 @@ def make_msg_from_frame(frame):
 def get_frame_from_msg(message):	
     recv_fr_seq = message[0]
     recv_fr_ack = message[1]
-    message = message[2:len(message)-1]
+    message = message[2:]
     recv_pkt = Packet(message)
     recv_fr = Frame(recv_pkt,int(recv_fr_seq),int(recv_fr_ack))
     return recv_fr
@@ -103,16 +103,18 @@ def data_link_enable():
 			if physicalLayer.physical_layer_ready(): # frame arrival
 				M = physicalLayer.from_physical_layer()
  				r = get_frame_from_msg(str(M))
-				f11 = open(method + '_recieved_from_physical_layer.txt', 'a')
-				f11.write(M + '\n')
-				f11.flush()
+				#f11 = open(method + '_recieved_from_physical_layer.txt', 'a')
+				#f11.write(M + '\n')
+				#f11.flush()
+				#f11.close()
 				if r.seq == frame_expected:
 					#write to file
-					f11 = open(method + '_sent_to_networkLayer.txt', 'a')
-					f11.write(M + '\n')
-					f11.flush()
+					#f11 = open(method + '_sent_to_networkLayer.txt', 'a')
+					#f11.write(r.info.arg + '\n')
+					#f11.flush()
+					#f11.close()
 					#to_network_layer(r.info)
-					networkLayer.pass_pkt(method + '_reached_network_layer.txt', M)
+					networkLayer.pass_pkt(method + '_reached_network_layer.txt', r.info.arg)
 					frame_expected += 1
 
 				while (between(ack_expected,r.ack,next_frame_to_send)):
@@ -131,10 +133,14 @@ def data_link_enable():
 
 			elif networkLayer.network_layer_ready(): # network_layer_ready
 				# from net_layer
-				new_packet = Packet(networkLayer.get_pkt())
+				#f = open("entered_event3.txt",'a')
+				
+				new_packet = Packet(networkLayer.get_pkt(method+"_taken_from_net_layer.txt"))
 				#new_packet = Packet('abcd') # send by net layer	
 							
 				BUFFER.append(new_packet)
+				#f.write(BUFFER[next_frame_to_send].arg + '\n')
+				#f.close()
 				#new_packet  = buffer[next_frame_to_send]
 				nbuffered = nbuffered +1
 				send_data(next_frame_to_send,frame_expected,BUFFER)
