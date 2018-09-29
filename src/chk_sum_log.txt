@@ -1,0 +1,11 @@
+CHK_SUM:  
+ message: a checksum: 1CHK_SUM:  
+ message: a checksum: 1CHK_SUM:  
+ message: e checksum: 1CHK_SUM:  
+ message: e checksum: 1CHK_SUM:  
+ message: i checksum: 1CHK_SUM:  
+ message: i checksum: 1CHK_SUM:  
+ message: o checksum: 1CHK_SUM:  
+ message: o checksum: 1CHK_SUM:  
+ message: u checksum: 1CHK_SUM:  
+ message: u checksum: 1
