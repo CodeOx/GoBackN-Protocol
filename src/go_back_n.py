@@ -84,6 +84,9 @@ def data_link_enable():
 	nbuffered = (-1)
 
 	#enable_network_layer()
+	#networkLayer.start_network_layer(src_ip, port)
+
+
 	ack_expected = 0
 	frame_expected = 0
 	next_frame_to_send = 0
@@ -100,12 +103,16 @@ def data_link_enable():
 			if physicalLayer.physical_layer_ready(): # frame arrival
 				M = physicalLayer.from_physical_layer()
  				r = get_frame_from_msg(str(M))
-				f11 = open('abcd.txt', 'w')
-				f11.write(M)
+				f11 = open(method + '_recieved_from_physical_layer.txt', 'a')
+				f11.write(M + '\n')
 				f11.flush()
 				if r.seq == frame_expected:
 					#write to file
+					f11 = open(method + '_sent_to_networkLayer.txt', 'a')
+					f11.write(M + '\n')
+					f11.flush()
 					#to_network_layer(r.info)
+					networkLayer.pass_pkt(method + '_reached_network_layer.txt', M)
 					frame_expected += 1
 
 				while (between(ack_expected,r.ack,next_frame_to_send)):
@@ -122,10 +129,11 @@ def data_link_enable():
 					send_data(next_frame_to_send,frame_expected,buffer)
 					next_frame_to_send+= 1
 
-			elif EVENT ==3: # network_layer_ready
+			elif networkLayer.network_layer_ready(): # network_layer_ready
 				# from net_layer
-				#new_packet = 'abcd'
-				new_packet = Packet('abcd') # send by net layer				
+				new_packet = Packet(networkLayer.get_pkt())
+				#new_packet = Packet('abcd') # send by net layer	
+							
 				BUFFER.append(new_packet)
 				#new_packet  = buffer[next_frame_to_send]
 				nbuffered = nbuffered +1
@@ -135,23 +143,21 @@ def data_link_enable():
 
 
 		if nbuffered<MAX_SEQ :
-			print
-			# enable net lay
+			print  # enable net lay
 		else:
 			print
-			# disable 
+			 
 
 
 physicalLayer.start_physical_layer(src_ip, port)
 t1 = threading.Thread(target= physicalLayer.recieveFrame, name='t1')
 t2 = threading.Thread(target = data_link_enable, name='t2')
-
-if method=='send' : 	
-	EVENT = 3
+t3 = threading.Thread(target = networkLayer.start_network_layer, name = 't3')
 
 t1.start()
 t2.start()
+t3.start()
 t1.join()
 t2.join()
-
+t3.join()
 			
