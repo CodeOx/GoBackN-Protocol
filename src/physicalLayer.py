@@ -2,6 +2,7 @@ import socket
 from scapy.all import *
 import time
 import datetime
+import switch
 
 packet_recieved = False
 message = ''
@@ -39,11 +40,14 @@ def recieveFrame():
 
 def sendFrame(message, ip, port):
     f = open('sent_from_origin_host.txt', 'a')
-    f.write(message)
-    f.flush()
+    message = switch.data_error(message)
+    message = switch.ack_error(message)
+    if (not switch.drop_packet()):
+	    f.write(message)
+	    f.flush()
+	    addr = (ip, port)
+	    client_socket.sendto(message, addr)
     f.close()
-    addr = (ip, port)
-    client_socket.sendto(message, addr)
 
 def write():
     fi = open('random.txt', 'w')
