@@ -17,8 +17,8 @@ def main():
     h1 = net.get('h1')
     h2 = net.get('h2')
     
-    p1 = h1.popen('python -u go_back_n.py -s %s -d %s -m % s &' % (h1.IP(), h2.IP(), 'host1'))
-    p2 =h2.popen('python -u go_back_n.py -s %s -d %s -m %s &' % (h2.IP(), h1.IP(), 'host2'))
+    p1 = h1.popen('python -u go_back_n.py -s %s -d %s -m % s &' % (h1.IP(), h2.IP(), 'HOST1'))
+    p2 =h2.popen('python -u go_back_n.py -s %s -d %s -m %s &' % (h2.IP(), h1.IP(), 'HOST2'))
     
     CLI( net )
     

@@ -5,7 +5,7 @@ import datetime
 import switch
 
 packet_recieved = False
-message = ''
+message = []
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -22,28 +22,28 @@ def physical_layer_ready():
 
 def from_physical_layer():
     global message
-    return message
+    M = message
+    message = []
+    return M
 
-def recieveFrame():
+def recieveFrame(filename):
     global packet_recieved, message
-    message = ''
     while True :
-	    message, address = server_socket.recvfrom(512)
-	    #return Ether(message)
-	    
-	    f = open('recieved_from_other_host.txt','a')
-	    f.write(message + '\n')
+	    m, address = server_socket.recvfrom(512)
+	    message.append(m)
+	    f = open(filename,'a')
+	    f.write(m + str(datetime.datetime.now()) +  '\n')
 	    f.flush()
 	    f.close()
 	    packet_recieved = True
     return
 
-def sendFrame(message, ip, port):
-    f = open('sent_from_origin_host.txt', 'a')
+def sendFrame(filename, message, ip, port):
+    f = open(filename, 'a')
     message = switch.data_error(message)
     message = switch.ack_error(message)
     if (not switch.drop_packet()):
-	    f.write(message)
+	    f.write(message + str(datetime.datetime.now())+ '\n')
 	    f.flush()
 	    addr = (ip, port)
 	    client_socket.sendto(message, addr)

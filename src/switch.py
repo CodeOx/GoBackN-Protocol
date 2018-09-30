@@ -2,7 +2,7 @@ import time
 import random
 from random import randint
 
-DATA_ERROR_PROBABILITY= 0
+DATA_ERROR_PROBABILITY= 0.5
 ACK_ERROR_PROBABILITY = 0
 DROP_PROBABILITY = 0
 

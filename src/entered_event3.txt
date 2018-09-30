@@ -13,10 +13,3 @@ east
 and
 and
 sets
-sets
-in
-in
-the
-the
-west
-west

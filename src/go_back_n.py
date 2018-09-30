@@ -5,12 +5,12 @@ import datetime
 import physicalLayer
 import networkLayer
 
-MAX_SEQ = 3
+MAX_SEQ = 7
 PACKET_READY = False
 EVENT = 0
 BUFFER =[]
-CLOCKS = [time.time() for i in range(MAX_SEQ)]
-THRESHOLD = 20
+CLOCKS = [-1 for i in range(MAX_SEQ)]
+THRESHOLD = 10
 
 parser = optparse.OptionParser()
 parser.add_option('-s', dest='src_ip', default='')
@@ -45,10 +45,11 @@ def between(a,b,c):
 		return False
 		
 def send_data(frame_nr,frame_expected,buffer):
+	global method
 	s = Frame(buffer[frame_nr],frame_nr,(frame_expected+MAX_SEQ)%(MAX_SEQ+1),len(buffer[frame_nr].arg))
 	#Frame s = Frame(buffer[frame_nr],frame_nr,0)
 	msg = make_msg_from_frame(s)	
-	physicalLayer.sendFrame(msg,dest_ip, port)
+	physicalLayer.sendFrame('SENT_FROM_PHYSICAL_LAYER_' + method + '_.txt',msg,dest_ip, port)
 	# send to physical layer
 	# start time
 
@@ -83,16 +84,22 @@ def check_time_out():
 	t = time.time()	
 		
 	f = open('clock_log.txt','a')
-	f.write('CLOCK_CHECK:   '+'\n')
-	for i in range(MAX_SEQ):
-		f.write(' '+str(i)+(': ')+str(CLOCKS[i])+'\n')
+	#f.write('CLOCK_CHECK:   '+'\n')
+	#for i in range(MAX_SEQ):
+	#	f.write(' '+str(i)+(': ')+str(CLOCKS[i])+'\n')
 	f.flush()
-	f.close()
+	
 	
 	for i in range(MAX_SEQ):
 		if (CLOCKS[i] != -1) :		
 			if (t-CLOCKS[i] > THRESHOLD):
+				f.write('TIMEOUT PACKET: '+ str(i) + '\n')
+				f.flush() 
 				return True
+		else :
+			f.write('hello\n')
+			f.flush()
+	f.close()	
 	return False
 
 def check_sum_err(frame):
@@ -131,46 +138,11 @@ def data_link_enable():
 
 
 
-	while (time.time()-t0 < 50):
+	while (True):
 
 		if EVENT < 4:
 					
-			if physicalLayer.physical_layer_ready(): # frame arrival
-				M = physicalLayer.from_physical_layer()
- 				r = get_frame_from_msg(str(M))
-				#f11 = open(method + '_recieved_from_physical_layer.txt', 'a')
-				#f11.write(M + '\n')
-				#f11.flush()
-				#f11.close()				
-				if (check_sum_err(r)==False):					
-					if r.seq == frame_expected:
-						#write to file
-						#f11 = open(method + '_sent_to_networkLayer.txt', 'a')
-						#f11.write(r.info.arg + '\n')
-						#f11.flush()
-						#f11.close()
-						#to_network_layer(r.info)
-						networkLayer.pass_pkt(method + '_reached_network_layer.txt', r.info.arg)
-						frame_expected = (frame_expected+ 1) % MAX_SEQ
-
-					while (between(ack_expected,r.ack,next_frame_to_send)):
-						nbuffered = (nbuffered -1)
-						#stop_timer()
-						CLOCKS[ack_expected] = -1					
-						ack_expected = (ack_expected + 1) % MAX_SEQ
-
-
-			#elif check_sum_err(): # cksum_err
-			#	pass
-			
-			#elif False:
-			elif check_time_out(): # timeout
-				next_frame_to_send = ack_expected
-				for i in xrange(1,nbuffered+1):
-					send_data(next_frame_to_send,frame_expected,buffer)
-					next_frame_to_send = (next_frame_to_send+ 1)%MAX_SEQ
-
-			elif networkLayer.network_layer_ready(): # network_layer_ready
+			if networkLayer.network_layer_ready() and nbuffered<MAX_SEQ: # network_layer_ready
 				# from net_layer
 				f = open("entered_event3.txt",'a')
 				
@@ -185,19 +157,48 @@ def data_link_enable():
 				nbuffered = (nbuffered +1)
 				send_data(next_frame_to_send,frame_expected,BUFFER)
 				next_frame_to_send = (next_frame_to_send+ 1)%MAX_SEQ 
-				EVENT = 0
+				EVENT = 0			
+			
+			elif physicalLayer.physical_layer_ready(): # frame arrival
+				message_array = physicalLayer.from_physical_layer()
+				for M in message_array :
+	 				r = get_frame_from_msg(str(M))
+					f11 = open(method + '_recieved_from_physical_layer.txt', 'a')
+					f11.write(M + str(datetime.datetime.now())+ '\n')
+					f11.flush()
+					f11.close()				
+					if (check_sum_err(r)==False):					
+						if r.seq == frame_expected:
+							#write to file
+							#f11 = open(method + '_sent_to_networkLayer.txt', 'a')
+							#f11.write(r.info.arg + '\n')
+							#f11.flush()
+							#f11.close()
+							#to_network_layer(r.info)
+							networkLayer.pass_pkt(method + '_reached_network_layer.txt', r.info.arg + '\t' + str((frame_expected+1)%MAX_SEQ) + '\n')
+							frame_expected = (frame_expected+ 1) % MAX_SEQ
+
+						while (between(ack_expected,r.ack,next_frame_to_send)):
+							nbuffered = (nbuffered -1)
+							#stop_timer()
+							CLOCKS[ack_expected] = -1					
+							ack_expected = (ack_expected + 1) % MAX_SEQ
 
 
-		if nbuffered<MAX_SEQ :
-			print  # enable net lay
-		else:
-			print
+			elif check_time_out(): # timeout
+				next_frame_to_send = ack_expected
+				for i in xrange(1,nbuffered+1):
+					CLOCKS[next_frame_to_send] = time.time()
+					send_data(next_frame_to_send,frame_expected,BUFFER)
+					next_frame_to_send = (next_frame_to_send+ 1)%MAX_SEQ
+
+			
 			 
 
-BUFFER = [Packet('') for i in range(MAX_SEQ)]
+BUFFER = [Packet('') for i in range(MAX_SEQ+1)]
 
 physicalLayer.start_physical_layer(src_ip, port)
-t1 = threading.Thread(target= physicalLayer.recieveFrame, name='t1')
+t1 = threading.Thread(target= physicalLayer.recieveFrame, name='t1', args=('RECEIVED_ON_' + method + '_.txt',))
 t2 = threading.Thread(target = data_link_enable, name='t2')
 t3 = threading.Thread(target = networkLayer.start_network_layer, name = 't3')
 
